@@ -61,7 +61,13 @@ def init_main():
     customer_service_rating = st.slider("Rate the customer service experience (1-5)", 1, 5)
     customer_service_feedback = st.text_area("Provide your qualitative feedback on the customer service experience")
     experience_date = st.date_input("Select the day of the experience")
-    experience_time = st.time_input("Select the time of the experience (hours and minutes)")
+
+    # Manual time input
+    st.markdown("#### Select the time of the experience (manually enter hours and minutes)")
+    experience_hour = st.number_input("Enter hour (0-23)", min_value=0, max_value=23, value=12, step=1)
+    experience_minute = st.number_input("Enter minute (0-59)", min_value=0, max_value=59, value=0, step=1)
+    experience_time = f"{experience_hour:02}:{experience_minute:02}"
+
     employee_activities = st.text_area("Describe the activities of the employees at the Career Workforce Center")
     actual_experience = st.text_area("Describe what actually happened during your experience")
     prescribed_activities = st.text_area("Describe any activities prescribed by the employees")
