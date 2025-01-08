@@ -29,43 +29,11 @@ class PDF(FPDF):
         self.ln()
 
     def add_experience(self, data):
-        self.chapter_title("Customer Service Rating")
-        self.chapter_body(str(data['Customer Service Rating'][0]))
+        for key, value in data.items():
+            self.chapter_title(key)
+            self.chapter_body(value)
 
-        self.chapter_title("Customer Service Feedback")
-        self.chapter_body(data['Customer Service Feedback'][0])
-
-        self.chapter_title("Experience Date")
-        self.chapter_body(str(data['Experience Date'][0]))
-
-        self.chapter_title("Experience Time")
-        self.chapter_body(str(data['Experience Time'][0]))
-
-        self.chapter_title("Employee Activities")
-        self.chapter_body(data['Employee Activities'][0])
-
-        self.chapter_title("Actual Experience")
-        self.chapter_body(data['Actual Experience'][0])
-
-        self.chapter_title("Prescribed Activities")
-        self.chapter_body(data['Prescribed Activities'][0])
-
-        self.chapter_title("Prescribed Notes")
-        self.chapter_body(data['Prescribed Notes'][0])
-
-        self.chapter_title("Experience Notes")
-        self.chapter_body(data['Experience Notes'][0])
-
-        # Add employee names
-        self.chapter_title("Employees Involved")
-        for name in data['Employee Names']:
-            self.chapter_body(name)
-
-        # Add Employee Handbook Ratings
-        self.chapter_title("Employee Performance Ratings")
-        for criterion, rating in data['Employee Handbook Ratings'][0].items():
-            self.chapter_body(f"{criterion}: {rating}/10")
-
+# Function to generate PDF from data
 def download_pdf(data):
     pdf = PDF()
     pdf.add_page()
@@ -103,21 +71,16 @@ def init_main():
     # Section for adding employee names
     st.subheader("Enter Employee Names Involved in the Experience")
 
-    # Initialize session state for employee names
     if "employee_names" not in st.session_state:
         st.session_state.employee_names = []
 
-    # Input area for employee names
     new_employee_name = st.text_input("Enter the name of the employee:")
     add_employee_button = st.button("Add Employee")
 
-    # Add employee name on button click
     if add_employee_button and new_employee_name:
         st.session_state.employee_names.append(new_employee_name)
         st.success(f"Employee '{new_employee_name}' added!")
-        new_employee_name = ""  # Clear input
 
-    # Display current list of employee names
     if st.session_state.employee_names:
         st.markdown("### Employees Involved:")
         for i, name in enumerate(st.session_state.employee_names):
@@ -143,29 +106,28 @@ def init_main():
         "Identify self-development areas"
     ]
 
-    # Collect ratings for each criterion
     st.subheader("Evaluate CareerForce Employee Performance")
-    employee_ratings = {}
-    for criterion in handbook_criteria:
-        rating = st.slider(f"{criterion}", 0, 10, 5)
-        employee_ratings[criterion] = rating
+    employee_ratings = {criterion: st.slider(f"{criterion}", 0, 10, 5) for criterion in handbook_criteria}
 
-    # Data dictionary
+    # Prepare data for export
     data = {
-        "Customer Service Rating": [customer_service_rating],
-        "Customer Service Feedback": [customer_service_feedback],
-        "Experience Date": [experience_date],
-        "Experience Time": [experience_time],
-        "Employee Activities": [employee_activities],
-        "Actual Experience": [actual_experience],
-        "Prescribed Activities": [prescribed_activities],
-        "Prescribed Notes": [prescribed_notes],
-        "Experience Notes": [experience_notes],
-        "Employee Names": st.session_state.employee_names,
-        "Employee Handbook Ratings": [employee_ratings]
+        "Customer Service Rating": str(customer_service_rating),
+        "Customer Service Feedback": customer_service_feedback,
+        "Experience Date": str(experience_date),
+        "Experience Time": str(experience_time),
+        "Employee Activities": employee_activities,
+        "Actual Experience": actual_experience,
+        "Prescribed Activities": prescribed_activities,
+        "Prescribed Notes": prescribed_notes,
+        "Experience Notes": experience_notes,
+        "Employee Names": ", ".join(st.session_state.employee_names) if st.session_state.employee_names else "None"
     }
 
-    df = pd.DataFrame(data)
+    # Append employee ratings to data
+    data.update({f"Rating - {criterion}": str(rating) for criterion, rating in employee_ratings.items()})
+
+    # Create a DataFrame
+    df = pd.DataFrame([data])
 
     # CSV download
     csv = convert_df_to_csv(df)
